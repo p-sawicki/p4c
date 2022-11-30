@@ -125,6 +125,7 @@ void collectTableSymbols(P4RuntimeSymbolTable& symbols, P4RuntimeArchHandlerIfac
     CHECK_NULL(tableBlock);
     auto name = archHandler->getControlPlaneName(tableBlock);
     auto id = externalId(P4RuntimeSymbolType::TABLE(), tableBlock->container);
+    symbols.addDeclaration(P4RuntimeSymbolType::TABLE(), name, tableBlock->container);
     symbols.add(P4RuntimeSymbolType::TABLE(), name, id);
     archHandler->collectTableProperties(&symbols, tableBlock);
 }
@@ -171,7 +172,9 @@ P4::ControlPlaneAPI::P4RuntimeSymbolTable::generateSymbols(
 void P4::ControlPlaneAPI::P4RuntimeSymbolTable::add(P4RuntimeSymbolType type,
                                                     const IR::IDeclaration* declaration) {
     CHECK_NULL(declaration);
-    add(type, declaration->controlPlaneName(), externalId(type, declaration));
+    const auto name = declaration->controlPlaneName();
+    addDeclaration(type, name, declaration);
+    add(type, name, externalId(type, declaration));
 }
 
 void P4::ControlPlaneAPI::P4RuntimeSymbolTable::add(P4RuntimeSymbolType type, cstring name,
@@ -183,6 +186,29 @@ void P4::ControlPlaneAPI::P4RuntimeSymbolTable::add(P4RuntimeSymbolType type, cs
 
     symbolTable[name] = tryToAssignId(id);
     suffixSet.addSymbol(name);
+}
+
+void P4::ControlPlaneAPI::P4RuntimeSymbolTable::addDeclaration(
+    const P4RuntimeSymbolType& type, cstring name, const IR::IDeclaration* declaration) {
+    CHECK_NULL(declaration);
+    LOG1("declaration " << declaration->getName());
+    if (declaration->getAnnotation(IR::Annotation::compilerGeneratedAnnotation) != nullptr) {
+        LOG1("compiler generated");
+        return;
+    }
+
+    auto& declTable = declTables[type];
+    const auto it = declTable.find(name);
+
+    if (it != declTable.end()) {
+        error(ErrorType::ERR_DUPLICATE,
+              "Multiple objects of the same type with the same control plane name (%3%) are not "
+              "allowed.%1%%2%",
+              it->second->getSourceInfo(), declaration->getSourceInfo(), name);
+        return;
+    }
+
+    declTable[name] = declaration;
 }
 
 P4::ControlPlaneAPI::p4rt_id_t P4::ControlPlaneAPI::P4RuntimeSymbolTable::getId(

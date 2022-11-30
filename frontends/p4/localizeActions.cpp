@@ -71,11 +71,16 @@ bool FindGlobalActionUses::preorder(const IR::PathExpression* path) {
 
         auto annos = action->annotations;
         if (annos == nullptr) annos = IR::Annotations::empty;
-        annos->addAnnotationIfNew(IR::Annotation::nameAnnotation,
-                                  new IR::StringLiteral(action->name), false);
+        annos = annos->addAnnotationIfNew(IR::Annotation::nameAnnotation,
+                                          new IR::StringLiteral(action->name), false);
+        if (repl->hasReplacement(action)) {
+            annos = annos->addAnnotationIfNew(IR::Annotation::compilerGeneratedAnnotation, nullptr,
+                                              false);
+        }
         auto replacement = new IR::P4Action(
             action->srcInfo, IR::ID(action->name.srcInfo, newName, action->name.originalName),
             annos, params, replBody);
+        LOG1("action " << replacement->name << " annos " << annos);
         repl->addReplacement(action, control, replacement);
     }
     return false;
@@ -154,8 +159,12 @@ bool FindRepeatedActionUses::preorder(const IR::PathExpression* expression) {
         auto params = cloner.clone<IR::ParameterList>(action->parameters);
 
         if (annos == nullptr) annos = IR::Annotations::empty;
-        annos->addAnnotationIfNew(IR::Annotation::nameAnnotation,
-                                  new IR::StringLiteral(action->name), false);
+        annos = annos->addAnnotationIfNew(IR::Annotation::nameAnnotation,
+                                          new IR::StringLiteral(action->name), false);
+        if (repl->hasReplacement(action)) {
+            annos = annos->addAnnotationIfNew(IR::Annotation::compilerGeneratedAnnotation, nullptr,
+                                              false);
+        }
         replacement = new IR::P4Action(
             action->srcInfo, IR::ID(action->name.srcInfo, newName, action->name.originalName),
             annos, params, replBody);

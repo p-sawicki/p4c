@@ -77,6 +77,7 @@ set (P4_FRONTEND_SRCS
   p4/uniqueNames.cpp
   p4/unusedDeclarations.cpp
   p4/uselessCasts.cpp
+  p4/validateControlPlaneNames.cpp
   p4/validateParsedProgram.cpp
   )
 
@@ -150,6 +151,7 @@ set (P4_FRONTEND_HDRS
   p4/uniqueNames.h
   p4/unusedDeclarations.h
   p4/uselessCasts.h
+  p4/validateControlPlaneNames.h
   p4/validateMatchAnnotations.h
   p4/validateParsedProgram.h
   )

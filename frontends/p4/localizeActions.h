@@ -26,6 +26,9 @@ limitations under the License.
 namespace P4 {
 
 class GlobalActionReplacements {
+    // All actions that have at least one replacement.
+    std::unordered_set<const IR::P4Action*> originalActions;
+
  public:
     // For each control that uses an action and for each each global action
     // we create a replacement.
@@ -45,6 +48,11 @@ class GlobalActionReplacements {
         if (repl.find(control) == repl.end())
             repl[control] = new ordered_map<const IR::P4Action*, const IR::P4Action*>();
         (*repl[control])[action] = replacement;
+        originalActions.insert(action);
+    }
+
+    bool hasReplacement(const IR::P4Action* action) const {
+        return originalActions.count(action) > 0;
     }
 };
 
@@ -84,6 +92,8 @@ class LocalizeActions : public Transform {
 };
 
 class ActionReplacement {
+    // All actions that have at least one replacement.
+    std::unordered_set<const IR::P4Action*> originalActions;
  public:
     // For each action and each user the replacement action to use.
     // Node is either a P4Table or MethodCallExpression.
@@ -106,11 +116,16 @@ class ActionReplacement {
             toInsert[original] = map;
         }
         (*map)[user] = replacement;
+        originalActions.insert(original);
     }
     // In the specified path replace the original with the replacement
     void setRefReplacement(const IR::PathExpression* path, const IR::P4Action* replacement) {
         LOG1("Adding replacement " << dbp(replacement) << " used by " << dbp(path));
         repl[path] = replacement;
+    }
+
+    bool hasReplacement(const IR::P4Action* action) const {
+        return originalActions.count(action) > 0;
     }
 };
 

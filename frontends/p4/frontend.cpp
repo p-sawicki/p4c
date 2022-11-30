@@ -71,6 +71,7 @@ limitations under the License.
 #include "uniqueNames.h"
 #include "unusedDeclarations.h"
 #include "uselessCasts.h"
+#include "validateControlPlaneNames.h"
 #include "validateMatchAnnotations.h"
 #include "validateParsedProgram.h"
 
@@ -174,6 +175,7 @@ const IR::P4Program* FrontEnd::run(const CompilerOptions& options, const IR::P4P
         new ResolveReferences(&refMap),  // check shadowing
         new Deprecated(&refMap),
         new CheckNamedArgs(),
+        new ValidateControlPlaneNames(),
         // Type checking and type inference.  Also inserts
         // explicit casts where implicit casts exist.
         new SetStrictStruct(&typeMap, true),  // Next pass uses strict struct checking

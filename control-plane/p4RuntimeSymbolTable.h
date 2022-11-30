@@ -133,6 +133,9 @@ class P4RuntimeSymbolTable : public P4RuntimeSymbolTableIface {
     void add(P4RuntimeSymbolType type, cstring name,
              boost::optional<p4rt_id_t> id = boost::none) override;
 
+    void addDeclaration(const P4RuntimeSymbolType& type, cstring name,
+                        const IR::IDeclaration* declaration);
+
     /// @return the P4Runtime id for the symbol of @type corresponding to
     /// @declaration.
     p4rt_id_t getId(P4RuntimeSymbolType type, const IR::IDeclaration* declaration) const override;
@@ -199,6 +202,9 @@ class P4RuntimeSymbolTable : public P4RuntimeSymbolTableIface {
     // Symbol tables, mapping symbols to P4Runtime ids.
     using SymbolTable = std::map<cstring, p4rt_id_t>;
     std::map<P4RuntimeSymbolType, SymbolTable> symbolTables{};
+
+    using DeclTable = std::map<cstring, const IR::IDeclaration*>;
+    std::map<P4RuntimeSymbolType, DeclTable> declTables{};
 
     // A set which contains all the symbols in the program. It's used to compute
     // the shortest unique suffix of each symbol, which is the default alias we
